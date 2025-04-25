@@ -1,0 +1,19 @@
+[package]
+name = "metol"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+parser = ["nom"]
+
+[dependencies]
+anyhow = "1.0.95"
+chrono = { version = "0.4.39", features = ["serde"] }
+futures = "0.3.31"
+nom = { version = "8.0.0", optional = true }
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.134"
+tokio = { version = "1.42.0", features = ["net"] }
+tokio-tungstenite = { version = "0.26.1", features = ["native-tls"] }
+tracing = "0.1.41"
+uuid = { version = "1.11.0", features = ["fast-rng", "v4"] }
