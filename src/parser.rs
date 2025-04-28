@@ -14,6 +14,7 @@ pub enum RawNode<'a> {
     GlobalUser(&'a str, Vec<&'a str>),
     LocalUser(&'a str),
     LocalCustomEmoji(&'a str),
+    HashTag(&'a str),
     Char(char),
 }
 
@@ -24,6 +25,7 @@ pub enum Node {
     GlobalUser(String, Vec<String>),
     LocalUser(String),
     LocalCustomEmoji(String),
+    HashTag(String),
     Plain(String),
 }
 
@@ -90,12 +92,34 @@ fn parse_local_custom_emoji(input: &str) -> IResult<&str, RawNode> {
     .parse(input)
 }
 
+fn hashtag_item(input: &str) -> IResult<&str, &str> {
+    let prohibited_chars = concat!(" \u{3000}\t\r\n", r##".,!?'"#:/[\]【】()「」（）<>"##);
+
+    alt((
+        recognize(delimited(tag("("), many0(hashtag_item), tag(")"))),
+        recognize(delimited(tag("["), many0(hashtag_item), tag("]"))),
+        recognize(delimited(tag("「"), many0(hashtag_item), tag("」"))),
+        recognize(delimited(tag("（"), many0(hashtag_item), tag("）"))),
+        recognize(none_of(prohibited_chars)),
+    ))
+    .parse(input)
+}
+
+fn parse_hashtag(input: &str) -> IResult<&str, RawNode> {
+    map(
+        preceded(tag("#"), recognize(many1(hashtag_item))),
+        RawNode::HashTag,
+    )
+    .parse(input)
+}
+
 fn parse_text(input: &str) -> IResult<&str, RawNode> {
     map(
         all_consuming(many0(alt((
             parse_global_user,
             parse_local_user,
             parse_local_custom_emoji,
+            parse_hashtag,
             parse_char,
         )))),
         RawNode::Span,
@@ -163,6 +187,7 @@ impl<'a> RawNode<'a> {
             ),
             RawNode::LocalUser(name) => Node::LocalUser(name.to_owned()),
             RawNode::LocalCustomEmoji(name) => Node::LocalCustomEmoji(name.to_owned()),
+            RawNode::HashTag(name) => Node::HashTag(name.to_owned()),
             RawNode::Char(c) => Node::Plain(c.to_string()),
         }
     }
@@ -388,5 +413,85 @@ mod test {
 
         let node = Node::from(raw_node);
         assert_eq!(node, Node::Plain("12:34:56".to_owned()));
+    }
+
+    #[test]
+    fn hashtag1() {
+        let raw_node = parse_mfm_raw("#");
+        assert_eq!(raw_node, RawNode::Span(vec![RawNode::Char('#')]));
+
+        let node = Node::from(raw_node);
+        assert_eq!(node, Node::Plain("#".to_owned()));
+    }
+
+    #[test]
+    fn hashtag2() {
+        let raw_node = parse_mfm_raw("#tag");
+        assert_eq!(raw_node, RawNode::Span(vec![RawNode::HashTag("tag")]));
+
+        let node = Node::from(raw_node);
+        assert_eq!(node, Node::HashTag("tag".to_owned()));
+    }
+
+    #[test]
+    fn hashtag3() {
+        let raw_node = parse_mfm_raw("#tag text");
+        assert_eq!(
+            raw_node,
+            RawNode::Span(vec![
+                RawNode::HashTag("tag"),
+                RawNode::Char(' '),
+                RawNode::Char('t'),
+                RawNode::Char('e'),
+                RawNode::Char('x'),
+                RawNode::Char('t')
+            ])
+        );
+
+        let node = Node::from(raw_node);
+        assert_eq!(
+            node,
+            Node::Span(vec![
+                Node::HashTag("tag".to_owned()),
+                Node::Plain(" text".to_owned())
+            ])
+        );
+    }
+
+    #[test]
+    fn hashtag4() {
+        let raw_node = parse_mfm_raw("#p(a[r]e)n");
+        assert_eq!(
+            raw_node,
+            RawNode::Span(vec![RawNode::HashTag("p(a[r]e)n"),])
+        );
+
+        let node = Node::from(raw_node);
+        assert_eq!(node, Node::HashTag("p(a[r]e)n".to_owned()));
+    }
+
+    #[test]
+    fn hashtag5() {
+        let raw_node = parse_mfm_raw("#p(aren");
+        assert_eq!(
+            raw_node,
+            RawNode::Span(vec![
+                RawNode::HashTag("p"),
+                RawNode::Char('('),
+                RawNode::Char('a'),
+                RawNode::Char('r'),
+                RawNode::Char('e'),
+                RawNode::Char('n'),
+            ])
+        );
+
+        let node = Node::from(raw_node);
+        assert_eq!(
+            node,
+            Node::Span(vec![
+                Node::HashTag("p".to_owned()),
+                Node::Plain("(aren".to_owned())
+            ])
+        );
     }
 }
