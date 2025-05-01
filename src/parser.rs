@@ -64,8 +64,7 @@ impl<'a> nom::Input for Input<'a> {
     fn take_from(&self, index: usize) -> Self {
         let is_line_head = self.s[..index]
             .chars()
-            .rev()
-            .next()
+            .next_back()
             .map(is_line_break_char)
             .unwrap_or(self.is_line_head);
 
@@ -83,8 +82,7 @@ impl<'a> nom::Input for Input<'a> {
                 s: suffix,
                 is_line_head: prefix
                     .chars()
-                    .rev()
-                    .next()
+                    .next_back()
                     .map(is_line_break_char)
                     .unwrap_or(self.is_line_head),
             },
@@ -115,7 +113,7 @@ impl<'a> nom::Input for Input<'a> {
     }
 }
 
-impl<'a> nom::Offset for Input<'a> {
+impl nom::Offset for Input<'_> {
     fn offset(&self, second: &Self) -> usize {
         second.s.as_ptr() as usize - self.s.as_ptr() as usize
     }
@@ -132,27 +130,21 @@ impl<'a> nom::Compare<&'a str> for Input<'a> {
 }
 
 fn is_line_break_char(c: char) -> bool {
-    match c {
-        '\r' | '\n' | '\u{000B}' | '\u{000C}' | '\u{0085}' | '\u{2028}' | '\u{2029}' => true,
-        _ => false,
-    }
+    matches!(
+        c,
+        '\r' | '\n' | '\u{000B}' | '\u{000C}' | '\u{0085}' | '\u{2028}' | '\u{2029}'
+    )
 }
 
 fn word_chars1(input: Input) -> IResult<Input, Input> {
-    take_while1(|c: char| match c {
-        '0'..='9' | 'A'..='Z' | '_' | 'a'..='z' => true,
-        _ => false,
-    })
-    .parse_complete(input)
+    take_while1(|c: char| matches!(c, '0'..='9' | 'A'..='Z' | '_' | 'a'..='z'))
+        .parse_complete(input)
 }
 
 fn parse_domain(input: Input) -> IResult<Input, Vec<&str>> {
     let domain_label = verify(
-        take_while1::<_, Input, _>(|c: char| match c {
-            '-' | '0'..='9' | 'A'..='Z' | 'a'..='z' => true,
-            _ => false,
-        }),
-        |s: &Input| s.s.chars().next().unwrap() != '-' && s.s.chars().last().unwrap() != '-',
+        take_while1::<_, Input, _>(|c: char| matches!(c, '-' | '0'..='9' | 'A'..='Z' | 'a'..='z' )),
+        |s: &Input| !s.s.starts_with('_') && !s.s.ends_with('-'),
     );
 
     map(
@@ -334,12 +326,12 @@ pub fn parse_mfm_raw(input: &str) -> RawNode {
         s: input,
         is_line_head: true,
     }) {
-        Ok((x, node)) if x.s.len() == 0 => node,
+        Ok((x, node)) if x.s.is_empty() => node,
         _ => unreachable!(),
     }
 }
 
-impl<'a> RawNode<'a> {
+impl RawNode<'_> {
     fn flatten(self) -> Self {
         match self {
             RawNode::Span(children) => {
@@ -380,7 +372,7 @@ impl<'a> RawNode<'a> {
                         (_, raw_item) => result.push(Node::from(raw_item)),
                     }
                 }
-                if result.len() == 0 {
+                if result.is_empty() {
                     Node::Empty
                 } else if result.len() == 1 {
                     result.pop().unwrap()
