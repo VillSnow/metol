@@ -1,10 +1,7 @@
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take_while1},
-    character::{
-        char as nom_char,
-        complete::{alphanumeric1, none_of},
-    },
+    bytes::{tag, take_while1},
+    character::{char as nom_char, complete::alphanumeric1, none_of},
     combinator::{map, map_res, not, opt, peek, recognize, verify},
     error::{ErrorKind, ParseError},
     multi::{many0, many1, many_till, separated_list1},
