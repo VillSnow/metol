@@ -1,11 +1,15 @@
 use nom::{
     branch::alt,
     bytes::{tag, take_while1},
-    character::{char as nom_char, complete::alphanumeric1, none_of},
+    character::{
+        char as nom_char,
+        complete::{alphanumeric1, one_of},
+        none_of,
+    },
     combinator::{map, map_res, not, opt, peek, recognize, verify},
     error::{ErrorKind, ParseError},
     multi::{many0, many1, many_till, separated_list1},
-    sequence::{delimited, pair, preceded, separated_pair},
+    sequence::{delimited, pair, preceded, separated_pair, terminated},
     IResult, Input as _, Parser,
 };
 
@@ -21,6 +25,26 @@ pub use node::{Node, RawNode};
 fn word_chars1(input: Input) -> IResult<Input, Input> {
     take_while1(|c: char| matches!(c, '0'..='9' | 'A'..='Z' | '_' | 'a'..='z'))
         .parse_complete(input)
+}
+
+fn peek_eol<'a>(input: Input<'a>) -> IResult<Input<'a>, ()> {
+    peek(|input: Input<'a>| {
+        if input
+            .s
+            .chars()
+            .next()
+            .map(is_line_break_char)
+            .unwrap_or(true)
+        {
+            Ok((input, ()))
+        } else {
+            Err(nom::Err::Error(nom::error::Error::from_error_kind(
+                input,
+                ErrorKind::Verify,
+            )))
+        }
+    })
+    .parse(input)
 }
 
 fn parse_domain(input: Input) -> IResult<Input, Vec<&str>> {
@@ -142,22 +166,7 @@ fn parse_center<'a>(input: Input<'a>) -> IResult<Input<'a>, RawNode<'a>> {
     map_res(
         pair(
             |input| parse_enclosed_text(input, "<center>", "</center>"),
-            peek(|input: Input<'a>| {
-                if input
-                    .s
-                    .chars()
-                    .next()
-                    .map(is_line_break_char)
-                    .unwrap_or(true)
-                {
-                    Ok((input, ()))
-                } else {
-                    Err(nom::Err::Error(nom::error::Error::from_error_kind(
-                        input,
-                        ErrorKind::Verify,
-                    )))
-                }
-            }),
+            peek_eol,
         ),
         |(children, _)| {
             if !children.is_empty() {
@@ -170,6 +179,25 @@ fn parse_center<'a>(input: Input<'a>) -> IResult<Input<'a>, RawNode<'a>> {
     .parse_complete(input)
 }
 
+fn parse_quote(input: Input) -> IResult<Input, RawNode> {
+    if !input.is_line_head {
+        return Err(nom::Err::Error(nom::error::Error::from_error_kind(
+            input,
+            ErrorKind::Verify,
+        )));
+    }
+
+    map(
+        (
+            many1(terminated(nom_char('>'), opt(one_of(" \u{3000}")))),
+            parse_text,
+            peek_eol,
+        ),
+        |(n, x, _)| RawNode::Quote(n.len(), Box::new(x)),
+    )
+    .parse(input)
+}
+
 fn parse_span_item(input: Input) -> IResult<Input, RawNode> {
     alt((
         parse_global_user,
@@ -178,6 +206,7 @@ fn parse_span_item(input: Input) -> IResult<Input, RawNode> {
         parse_hashtag,
         parse_small,
         parse_center,
+        parse_quote,
         parse_char,
     ))
     .parse_complete(input)

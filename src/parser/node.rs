@@ -7,6 +7,7 @@ pub enum RawNode<'a> {
     HashTag(&'a str),
     Small(Box<RawNode<'a>>),
     Center(Box<RawNode<'a>>),
+    Quote(usize, Box<RawNode<'a>>),
     Char(char),
 }
 
@@ -20,6 +21,7 @@ pub enum Node {
     HashTag(String),
     Small(Box<Node>),
     Center(Box<Node>),
+    Quote(usize, Box<Node>),
     Plain(String),
 }
 
@@ -45,6 +47,7 @@ impl RawNode<'_> {
             }
             RawNode::Small(child) => RawNode::Small(Box::new(child.flatten())),
             RawNode::Center(child) => RawNode::Center(Box::new(child.flatten())),
+            RawNode::Quote(n, child) => RawNode::Quote(n, Box::new(child.flatten())),
             RawNode::GlobalUser(_, _)
             | RawNode::LocalUser(_)
             | RawNode::LocalCustomEmoji(_)
@@ -81,6 +84,7 @@ impl RawNode<'_> {
             RawNode::HashTag(name) => Node::HashTag(name.to_owned()),
             RawNode::Small(child) => Node::Small(Box::new(child.into_node())),
             RawNode::Center(child) => Node::Center(Box::new(child.into_node())),
+            RawNode::Quote(n, child) => Node::Quote(n, Box::new(child.into_node())),
             RawNode::Char(c) => Node::Plain(c.to_string()),
         }
     }
@@ -98,6 +102,9 @@ impl Node {
             Node::LocalUser(name) => Node::GlobalUser(name, source_host.clone()),
             Node::Small(child) => Node::Small(Box::new(child.into_global(source_host.clone()))),
             Node::Center(child) => Node::Center(Box::new(child.into_global(source_host.clone()))),
+            Node::Quote(n, child) => {
+                Node::Quote(n, Box::new(child.into_global(source_host.clone())))
+            }
             Node::Empty
             | Node::GlobalUser(_, _)
             | Node::LocalCustomEmoji(_)

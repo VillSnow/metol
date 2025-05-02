@@ -363,3 +363,57 @@ fn center5() {
         ])
     );
 }
+
+#[test]
+fn quote1() {
+    let node = parse_mfm(">aaa");
+    assert_eq!(
+        node,
+        Node::Quote(1, Box::new(Node::Plain("aaa".to_owned())))
+    );
+}
+
+#[test]
+fn quote2() {
+    let node = parse_mfm("> aaa");
+    assert_eq!(
+        node,
+        Node::Quote(1, Box::new(Node::Plain("aaa".to_owned())))
+    );
+}
+
+#[test]
+fn quote3() {
+    let node = parse_mfm("aaa>bbb");
+    assert_eq!(node, Node::Plain("aaa>bbb".to_owned()));
+}
+
+#[test]
+fn quote4() {
+    let node = parse_mfm("aaa\n>bbb");
+    assert_eq!(
+        node,
+        Node::Span(vec![
+            Node::Plain("aaa\n".to_owned()),
+            Node::Quote(1, Box::new(Node::Plain("bbb".to_owned()))),
+        ])
+    );
+}
+
+#[test]
+fn quote5() {
+    let node = parse_mfm(">>aaa");
+    assert_eq!(
+        node,
+        Node::Quote(2, Box::new(Node::Plain("aaa".to_owned())))
+    );
+}
+
+#[test]
+fn quote6() {
+    let node = parse_mfm("> > aaa");
+    assert_eq!(
+        node,
+        Node::Quote(2, Box::new(Node::Plain("aaa".to_owned())))
+    );
+}
