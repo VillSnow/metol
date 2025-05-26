@@ -417,3 +417,9 @@ fn quote6() {
         Node::Quote(2, Box::new(Node::Plain("aaa".to_owned())))
     );
 }
+
+#[test]
+fn plain_tag1() {
+    let node = parse_mfm("<plain>aaa</plain>");
+    assert_eq!(node, Node::PlainTag("aaa".to_owned()));
+}

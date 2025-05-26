@@ -7,6 +7,7 @@ pub enum RawNode<'a> {
     HashTag(&'a str),
     Small(Box<RawNode<'a>>),
     Center(Box<RawNode<'a>>),
+    PlainTag(&'a str),
     Quote(usize, Box<RawNode<'a>>),
     Char(char),
 }
@@ -21,6 +22,7 @@ pub enum Node {
     HashTag(String),
     Small(Box<Node>),
     Center(Box<Node>),
+    PlainTag(String),
     Quote(usize, Box<Node>),
     Plain(String),
 }
@@ -52,6 +54,7 @@ impl RawNode<'_> {
             | RawNode::LocalUser(_)
             | RawNode::LocalCustomEmoji(_)
             | RawNode::HashTag(_)
+            | RawNode::PlainTag(_)
             | RawNode::Char(_) => self,
         }
     }
@@ -84,6 +87,7 @@ impl RawNode<'_> {
             RawNode::HashTag(name) => Node::HashTag(name.to_owned()),
             RawNode::Small(child) => Node::Small(Box::new(child.into_node())),
             RawNode::Center(child) => Node::Center(Box::new(child.into_node())),
+            RawNode::PlainTag(s) => Node::PlainTag(s.to_owned()),
             RawNode::Quote(n, child) => Node::Quote(n, Box::new(child.into_node())),
             RawNode::Char(c) => Node::Plain(c.to_string()),
         }
@@ -109,6 +113,7 @@ impl Node {
             | Node::GlobalUser(_, _)
             | Node::LocalCustomEmoji(_)
             | Node::HashTag(_)
+            | Node::PlainTag(_)
             | Node::Plain(_) => self,
         }
     }

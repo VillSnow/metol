@@ -179,6 +179,36 @@ fn parse_center<'a>(input: Input<'a>) -> IResult<Input<'a>, RawNode<'a>> {
     .parse_complete(input)
 }
 
+fn parse_plain_tag<'a>(input: Input<'a>) -> IResult<Input<'a>, RawNode<'a>> {
+    let open = "<plain>";
+    let close = "</plain>";
+    if !input.s.starts_with(open) {
+        return Err(nom::Err::Error(nom::error::Error::new(
+            input,
+            nom::error::ErrorKind::Tag,
+        )));
+    }
+    let input = input.take_from(open.len());
+
+    let Some(n) = input.s.find(close) else {
+        return Err(nom::Err::Error(nom::error::Error::new(
+            input,
+            nom::error::ErrorKind::Tag,
+        )));
+    };
+    if n == 0 {
+        return Err(nom::Err::Error(nom::error::Error::new(
+            input,
+            nom::error::ErrorKind::Many1,
+        )));
+    }
+
+    let content = &input.s[..n];
+    let input = input.take_from(n + close.len());
+
+    Ok((input, RawNode::PlainTag(content)))
+}
+
 fn parse_quote(input: Input) -> IResult<Input, RawNode> {
     if !input.is_line_head {
         return Err(nom::Err::Error(nom::error::Error::from_error_kind(
@@ -206,6 +236,7 @@ fn parse_span_item(input: Input) -> IResult<Input, RawNode> {
         parse_hashtag,
         parse_small,
         parse_center,
+        parse_plain_tag,
         parse_quote,
         parse_char,
     ))
