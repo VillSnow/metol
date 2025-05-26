@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::{receiving_ws_msg, sending_ws_msg};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MiChannel {
     Global,
     Home,
