@@ -1,82 +1,27 @@
-use std::collections::HashMap;
-
-use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct Note {
-    pub id: String,
+pub mod achievement;
+pub mod announcement;
+pub mod channel;
+pub mod drive_file;
+pub mod field;
+pub mod meta;
+pub mod note;
+pub mod page;
+pub mod role_lite;
+pub mod roll_policies;
+pub mod user;
 
-    #[serde(rename = "createdAt")]
-    pub created_at: DateTime<Utc>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub text: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub cw: Option<String>,
-
-    pub user: User,
-
-    #[serde(rename = "userId")]
-    pub user_id: String,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub reply: Option<Box<Note>>,
-
-    #[serde(rename = "replyId")]
-    pub reply_id: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub renote: Option<Box<Note>>,
-
-    #[serde(rename = "renoteId")]
-    pub renote_id: Option<String>,
-
-    pub files: Vec<DriveFile>,
-
-    #[serde(rename = "fileIds")]
-    pub file_ids: Vec<String>,
-
-    pub visibility: Visibility,
-
-    #[serde(rename = "visibleUserIds")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub visible_user_ids: Option<Vec<String>>,
-
-    #[serde(rename = "localOnly")]
-    pub local_only: Option<bool>, // FIXME: デフォルト値?
-
-    #[serde(rename = "myReaction")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub my_reaction: Option<String>,
-
-    pub reactions: HashMap<String, i64>,
-
-    #[serde(rename = "renoteCount")]
-    pub renote_count: i64,
-
-    #[serde(rename = "repliesCount")]
-    pub replies_count: i64,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub poll: Option<Poll>,
-
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub emojis: Option<Vec<Emoji>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub uri: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub url: Option<String>,
-
-    #[serde(rename = "isHidden")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub is_hidden: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mentions: Option<Vec<String>>,
-}
+pub use achievement::Achievements;
+pub use announcement::Announcement;
+pub use channel::Channel;
+pub use drive_file::DriveFile;
+pub use meta::{MetaDetailed, MetaLite};
+pub use note::Note;
+pub use page::Page;
+pub use role_lite::RoleLite;
+pub use roll_policies::RolePolicies;
+pub use user::{UserDetailedNotMe, UserLite};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct User {
@@ -136,38 +81,7 @@ pub struct UserInstance {
     theme_color: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct DriveFile {
-    pub id: String,
-
-    #[serde(rename = "createdAt")]
-    pub created_at: String,
-
-    #[serde(rename = "isSensitive")]
-    pub is_sensitive: bool,
-
-    pub name: String,
-
-    #[serde(rename = "thumbnailUrl")]
-    pub thumbnail_url: Option<String>,
-
-    pub url: String,
-
-    #[serde(rename = "type")]
-    pub type_: String,
-
-    pub size: i64,
-
-    pub md5: String,
-
-    #[serde(rename = "blurhash")]
-    pub blur_hash: Option<String>,
-
-    pub comment: Option<String>,
-    // TODO: properties: Record<string, any>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Visibility {
     #[serde(rename = "public")]
     Public,
