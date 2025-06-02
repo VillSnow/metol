@@ -419,6 +419,18 @@ fn quote6() {
 }
 
 #[test]
+fn quote7() {
+    let node = parse_mfm("> aaa\nbbb");
+    assert_eq!(
+        node,
+        Node::Span(vec![
+            Node::Quote(1, Box::new(Node::Plain("aaa".to_owned()))),
+            Node::Plain("bbb".to_owned())
+        ])
+    );
+}
+
+#[test]
 fn plain_tag1() {
     let node = parse_mfm("<plain>aaa</plain>");
     assert_eq!(node, Node::PlainTag("aaa".to_owned()));

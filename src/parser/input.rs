@@ -1,6 +1,6 @@
 use std::str::{CharIndices, Chars};
 
-use super::utils::is_line_break_char;
+use super::utils::LINE_BREAK_PATTERNS;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Input<'a> {
@@ -25,15 +25,9 @@ impl<'a> nom::Input for Input<'a> {
     }
 
     fn take_from(&self, index: usize) -> Self {
-        let is_line_head = self.s[..index]
-            .chars()
-            .next_back()
-            .map(is_line_break_char)
-            .unwrap_or(self.is_line_head);
-
         Self {
             s: &self.s[index..],
-            is_line_head,
+            is_line_head: is_line_end(&self.s[..index]).unwrap_or(self.is_line_head),
         }
     }
 
@@ -43,11 +37,7 @@ impl<'a> nom::Input for Input<'a> {
         (
             Input {
                 s: suffix,
-                is_line_head: prefix
-                    .chars()
-                    .next_back()
-                    .map(is_line_break_char)
-                    .unwrap_or(self.is_line_head),
+                is_line_head: is_line_end(prefix).unwrap_or(self.is_line_head),
             },
             Input {
                 s: prefix,
@@ -90,4 +80,16 @@ impl<'a> nom::Compare<&'a str> for Input<'a> {
     fn compare_no_case(&self, t: &'a str) -> nom::CompareResult {
         nom::Compare::compare_no_case(&self.s, t)
     }
+}
+
+fn is_line_end(s: &str) -> Option<bool> {
+    if s.is_empty() {
+        return None;
+    }
+    for pat in LINE_BREAK_PATTERNS {
+        if s.ends_with(pat) {
+            return Some(true);
+        }
+    }
+    Some(false)
 }

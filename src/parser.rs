@@ -18,7 +18,7 @@ mod node;
 mod utils;
 
 use input::Input;
-use utils::is_line_break_char;
+use utils::LINE_BREAK_PATTERNS;
 
 pub use node::{Node, RawNode};
 
@@ -27,24 +27,22 @@ fn word_chars1(input: Input) -> IResult<Input, Input> {
         .parse_complete(input)
 }
 
-fn peek_eol<'a>(input: Input<'a>) -> IResult<Input<'a>, ()> {
-    peek(|input: Input<'a>| {
-        if input
-            .s
-            .chars()
-            .next()
-            .map(is_line_break_char)
-            .unwrap_or(true)
-        {
-            Ok((input, ()))
-        } else {
-            Err(nom::Err::Error(nom::error::Error::from_error_kind(
-                input,
-                ErrorKind::Verify,
-            )))
+fn eol<'a>(input: Input<'a>) -> IResult<Input<'a>, Input<'a>> {
+    if input.s.is_empty() {
+        return Ok(input.take_split(0));
+    }
+
+    for pat in LINE_BREAK_PATTERNS {
+        if input.s.starts_with(pat) {
+            dbg!("ok");
+            return Ok(input.take_split(pat.len()));
         }
-    })
-    .parse(input)
+    }
+
+    Err(nom::Err::Error(nom::error::Error::from_error_kind(
+        input,
+        ErrorKind::Verify,
+    )))
 }
 
 fn parse_domain(input: Input) -> IResult<Input, Vec<&str>> {
@@ -166,7 +164,7 @@ fn parse_center<'a>(input: Input<'a>) -> IResult<Input<'a>, RawNode<'a>> {
     map_res(
         pair(
             |input| parse_enclosed_text(input, "<center>", "</center>"),
-            peek_eol,
+            peek(eol),
         ),
         |(children, _)| {
             if !children.is_empty() {
@@ -220,10 +218,12 @@ fn parse_quote(input: Input) -> IResult<Input, RawNode> {
     map(
         (
             many1(terminated(nom_char('>'), opt(one_of(" \u{3000}")))),
-            parse_text,
-            peek_eol,
+            map(
+                many_till(parse_span_item, alt((eol, peek(eol)))),
+                |(xs, _)| RawNode::Span(xs),
+            ),
         ),
-        |(n, x, _)| RawNode::Quote(n.len(), Box::new(x)),
+        |(n, x)| RawNode::Quote(n.len(), Box::new(x)),
     )
     .parse(input)
 }
