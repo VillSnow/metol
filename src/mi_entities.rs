@@ -117,9 +117,15 @@ pub struct PollChoice {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "camelCase")]
 pub struct EmojiSimple {
     pub name: String,
+    pub category: Option<String>,
     pub url: String,
+    pub aliases: Vec<String>,
+    pub local_only: Option<bool>,
+    pub is_sensitive: Option<bool>,
+    pub role_ids_that_can_be_used_this_emoji_as_reaction: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]

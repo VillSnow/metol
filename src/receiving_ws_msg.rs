@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::mi_entities::{EmojiSimple, Note};
+use crate::mi_entities::Note;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "body")]
@@ -32,10 +32,16 @@ pub enum NoteUpdatedBody {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NoteUpdatedBodyReactedBody {
-    pub emoji: Option<EmojiSimple>,
+    pub emoji: Option<Emoji>,
 
     pub reaction: String,
 
     #[serde(rename = "userId")]
     pub user_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Emoji {
+    name: String,
+    url: String,
 }
