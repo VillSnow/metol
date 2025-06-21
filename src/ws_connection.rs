@@ -109,13 +109,14 @@ impl WsConnection {
         loop {
             match self.ws.next().await {
                 Some(Ok(msg)) => match msg {
-                    Message::Text(text) => {
-                        if let Ok(msg) = serde_json::from_slice(text.as_bytes()) {
+                    Message::Text(text) => match serde_json::from_slice(text.as_bytes()) {
+                        Ok(msg) => {
                             return Ok(Ok(msg));
-                        } else {
-                            warn!("unknown text message: {text}");
                         }
-                    }
+                        Err(err) => {
+                            warn!("unknown text message: {text}, {err:?}");
+                        }
+                    },
                     Message::Ping(_) => self.send_pong().await?,
                     Message::Pong(_) => {}
                     Message::Close(_) => {
