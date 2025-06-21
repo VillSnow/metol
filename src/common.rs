@@ -1,2 +1,2 @@
 pub type Int = i64;
-pub type Real = num_rational::Rational64;
+pub type Real = rust_decimal::Decimal;
