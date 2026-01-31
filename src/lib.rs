@@ -6,6 +6,7 @@ pub mod receiving_ws_msg;
 pub mod sending_ws_msg;
 pub mod ws_connection;
 
+pub use client::Client;
 pub use common::Real;
 
 #[cfg(feature = "parser")]
