@@ -18,6 +18,12 @@ pub enum ReceivingWsMsg {
 pub enum WsMsgChannelBody {
     #[serde(rename = "note")]
     Note { id: String, body: Note },
+
+    #[serde(rename = "mention")]
+    Mention { id: String, body: Note },
+
+    #[serde(rename = "reply")]
+    Reply { id: String, body: Note },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

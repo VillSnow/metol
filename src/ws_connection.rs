@@ -14,6 +14,8 @@ pub enum MiChannel {
     Hybrid,
     Local,
     Main,
+    Channel { channel_id: String },
+    Antenna { antenna_id: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -93,6 +95,26 @@ impl WsConnection {
                     "id": id.clone(),
                     "channel": "main",
                     "params": {}
+                }
+            }),
+            MiChannel::Channel { channel_id } => json!({
+                "type": "connect",
+                "body": {
+                    "id": id.clone(),
+                    "channel": "channel",
+                    "params": {
+                        "channelId": channel_id
+                    }
+                }
+            }),
+            MiChannel::Antenna { antenna_id } => json!({
+                "type": "connect",
+                "body": {
+                    "id": id.clone(),
+                    "channel": "antenna",
+                    "params": {
+                        "antennaId": antenna_id
+                    }
                 }
             }),
         };
