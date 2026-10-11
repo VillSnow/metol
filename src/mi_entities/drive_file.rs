@@ -1,11 +1,11 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::common::Int;
+use crate::common::{Int, Real};
 
 use super::UserLite;
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DriveFile {
     pub id: String,
@@ -13,7 +13,7 @@ pub struct DriveFile {
     pub name: String,
     pub r#type: String,
     pub md5: String,
-    pub size: f64,
+    pub size: Real,
     pub is_sensitive: bool,
     pub blurhash: Option<String>,
     pub properties: Box<Properties>,
@@ -26,7 +26,7 @@ pub struct DriveFile {
     pub user: Option<Box<UserLite>>,
 }
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DriveFolder {
     pub id: String,
@@ -46,17 +46,17 @@ pub struct DriveFolder {
     pub parent: Option<Box<DriveFolder>>,
 }
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Properties {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub width: Option<f64>, //FIXME
+    pub width: Option<Real>, //FIXME
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub height: Option<f64>, //FIXME
+    pub height: Option<Real>, //FIXME
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub orientation: Option<f64>, //FIXME
+    pub orientation: Option<Real>, //FIXME
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub avg_color: Option<String>,

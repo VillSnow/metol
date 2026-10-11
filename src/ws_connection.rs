@@ -1,5 +1,6 @@
 use anyhow::bail;
 use futures::{SinkExt, StreamExt};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use tracing::{info, warn};
@@ -7,7 +8,7 @@ use uuid::Uuid;
 
 use crate::{receiving_ws_msg, sending_ws_msg};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MiChannel {
     Global,
     Home,

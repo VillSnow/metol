@@ -5,7 +5,7 @@ use crate::common::Int;
 
 use super::{DriveFile, UserLite, Visibility};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Note {
     pub id: String,
@@ -60,7 +60,7 @@ pub struct Note {
     pub poll: Option<NotePoll>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub emojis: Option<std::collections::HashMap<String, serde_json::Value>>, // FIXME
+    pub emojis: Option<std::collections::BTreeMap<String, serde_json::Value>>, // FIXME
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub channel_id: Option<String>,
@@ -72,8 +72,8 @@ pub struct Note {
     pub local_only: Option<bool>,
 
     pub reaction_acceptance: Option<ReactionAcceptance>,
-    pub reaction_emojis: std::collections::HashMap<String, serde_json::Value>, // FIXME
-    pub reactions: std::collections::HashMap<String, serde_json::Value>,       // FIXME
+    pub reaction_emojis: std::collections::BTreeMap<String, serde_json::Value>, // FIXME
+    pub reactions: std::collections::BTreeMap<String, serde_json::Value>,       // FIXME
     pub reaction_count: Int,
     pub renote_count: Int,
     pub replies_count: Int,
@@ -94,7 +94,7 @@ pub struct Note {
     pub my_reaction: Option<String>,
 }
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotePoll {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -105,7 +105,7 @@ pub struct NotePoll {
     pub choices: Vec<PollChoice>,
 }
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PollChoice {
     pub is_voted: bool,
@@ -113,7 +113,7 @@ pub struct PollChoice {
     pub votes: Int,
 }
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Channel {
     pub id: String,

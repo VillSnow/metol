@@ -4,7 +4,7 @@ use crate::{common::Int, Real};
 
 use super::{Achievements, Announcement, Note, OnlineStatus, Page, RoleLite, RolePolicies};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserLite {
     pub id: String,
@@ -26,15 +26,15 @@ pub struct UserLite {
     pub require_signin_to_view_contents: Option<bool>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub make_notes_followers_only_before: Option<f64>,
+    pub make_notes_followers_only_before: Option<Real>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub make_notes_hidden_before: Option<f64>,
+    pub make_notes_hidden_before: Option<Real>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub instance: Option<Box<Instance>>,
 
-    pub emojis: std::collections::HashMap<String, String>,
+    pub emojis: std::collections::BTreeMap<String, String>,
 
     pub online_status: OnlineStatus,
 
@@ -199,7 +199,7 @@ pub struct MeDetailed {
     pub me_only: MeOnly,
 }
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AvatarDecoration {
     pub id: String,
@@ -219,7 +219,7 @@ pub struct AvatarDecoration {
     pub offset_y: Option<Real>,
 }
 
-#[derive(Clone, Default, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Instance {
     pub name: Option<String>,
     pub software_name: Option<String>,
@@ -229,7 +229,7 @@ pub struct Instance {
     pub theme_color: Option<String>,
 }
 
-#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BadgeRole {
     pub name: String,
