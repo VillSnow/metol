@@ -14,7 +14,8 @@ type WebSocketStream =
     tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
 
 pub struct Client {
-    host: String,
+    http_url: String,
+    ws_url: String,
     token: Option<String>,
     ws: Option<WebSocketStream>,
     max_retry: i32,
@@ -25,9 +26,27 @@ pub struct Client {
 }
 
 impl Client {
+    /// HTTPS と WSS を使う通常の Misskey インスタンス向けクライアントを作成します。
     pub fn new(host: String, token: Option<String>) -> Self {
+        Self::with_endpoints(
+            format!("https://{host}"),
+            format!("wss://{host}"),
+            token,
+        )
+    }
+
+    /// HTTP(S) と WS(S) の接続先を明示してクライアントを作成します。
+    ///
+    /// 接続先にはパスを含めず、サーバーの origin を指定してください。
+    /// ローカル開発では `http://127.0.0.1:3000` と `ws://127.0.0.1:3000` のように指定します。
+    pub fn with_endpoints(
+        http_url: String,
+        ws_url: String,
+        token: Option<String>,
+    ) -> Self {
         Self {
-            host,
+            http_url: http_url.trim_end_matches('/').to_owned(),
+            ws_url: ws_url.trim_end_matches('/').to_owned(),
             token,
             ws: None,
             max_retry: 10,
@@ -45,7 +64,7 @@ impl Client {
         }
 
         let meta = reqwest::Client::new()
-            .post(format!("https://{}/api/meta", &self.host))
+            .post(format!("{}/api/meta", &self.http_url))
             .json(&ReqBody { detail: true })
             .send()
             .await?
@@ -62,7 +81,7 @@ impl Client {
 
     pub async fn create_reaction(&self, node_id: &str, reaction: &str) -> anyhow::Result<()> {
         let res = reqwest::Client::new()
-            .post(format!("https://{}/api/notes/reactions/create", &self.host))
+            .post(format!("{}/api/notes/reactions/create", &self.http_url))
             .json(&serde_json::json!({"noteId": node_id,"reaction": reaction,"i": self.token.as_ref().unwrap()}))
             .send()
             .await?;
@@ -88,7 +107,7 @@ impl Client {
         }
         let c = reqwest::Client::new();
         let notes: Vec<Note> = c
-            .post(format!("https://{}/api/notes/conversation", &self.host))
+            .post(format!("{}/api/notes/conversation", &self.http_url))
             .json(&ReqBody {
                 note_id,
                 limit: None,
@@ -119,7 +138,7 @@ impl Client {
         }
         let c = reqwest::Client::new();
         let notes: Vec<Note> = c
-            .post(format!("https://{}/api/notes/local-timeline", &self.host))
+            .post(format!("{}/api/notes/local-timeline", &self.http_url))
             .json(&ReqBody {
                 limit: None,
                 offset: Some(100),

@@ -2,6 +2,10 @@
 # この破棄可能な開発環境だけで使い、公開サーバーでは再利用しないでください。
 url: http://localhost:3000/
 port: 3000
+setupPassword: metol-local-setup-password
+
+# 生成するID形式です。起動後に変更すると既存データと整合しなくなるため固定します。
+id: 'aidx'
 
 db:
   host: db

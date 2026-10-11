@@ -87,7 +87,7 @@ impl super::Client {
         match tl {
             MiChannel::Main => todo!(),
             MiChannel::Home => {
-                endpoint = format!("https://{}/api/notes/timeline", &self.host);
+                endpoint = format!("{}/api/notes/timeline", &self.http_url);
                 body = ReqBody {
                     limit: params.limit,
                     offset: params.offset,
@@ -96,7 +96,7 @@ impl super::Client {
                 };
             }
             MiChannel::Local => {
-                endpoint = format!("https://{}/api/notes/local-timeline", &self.host);
+                endpoint = format!("{}/api/notes/local-timeline", &self.http_url);
                 body = ReqBody {
                     limit: params.limit,
                     offset: params.offset,
@@ -105,7 +105,7 @@ impl super::Client {
                 };
             }
             MiChannel::Hybrid => {
-                endpoint = format!("https://{}/api/notes/hybrid-timeline", &self.host);
+                endpoint = format!("{}/api/notes/hybrid-timeline", &self.http_url);
                 body = ReqBody {
                     limit: params.limit,
                     offset: params.offset,
@@ -114,7 +114,7 @@ impl super::Client {
                 };
             }
             MiChannel::Global => {
-                endpoint = format!("https://{}/api/notes/global-timeline", &self.host);
+                endpoint = format!("{}/api/notes/global-timeline", &self.http_url);
                 body = ReqBody {
                     limit: params.limit,
                     offset: params.offset,
@@ -123,7 +123,7 @@ impl super::Client {
                 };
             }
             MiChannel::Channel { channel_id } => {
-                endpoint = format!("https://{}/api/channels/timeline", &self.host);
+                endpoint = format!("{}/api/channels/timeline", &self.http_url);
                 body = ReqBody {
                     channel_id: Some(channel_id.to_owned()),
                     limit: params.limit,
@@ -133,7 +133,7 @@ impl super::Client {
                 };
             }
             MiChannel::Antenna { antenna_id } => {
-                endpoint = format!("https://{}/api/antennas/notes", &self.host);
+                endpoint = format!("{}/api/antennas/notes", &self.http_url);
                 body = ReqBody {
                     antenna_id: Some(antenna_id.to_owned()),
                     limit: params.limit,
@@ -219,9 +219,9 @@ impl super::Client {
 
     fn stream_url(&self) -> String {
         if let Some(token) = self.token.as_ref() {
-            format!("wss://{}/stream?i={}", &self.host, &token)
+            format!("{}/stream?i={}", &self.ws_url, &token)
         } else {
-            format!("wss://{}/stream", &self.host)
+            format!("{}/stream", &self.ws_url)
         }
     }
 

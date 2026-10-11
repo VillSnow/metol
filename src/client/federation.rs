@@ -62,7 +62,7 @@ impl super::Client {
         }
 
         let instances = reqwest::Client::new()
-            .post(format!("https://{}/api/federation/instances", &self.host))
+            .post(format!("{}/api/federation/instances", &self.http_url))
             .json(&ReqBody {
                 offset: params.offset,
                 limit: params.limit,
