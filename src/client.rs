@@ -1,18 +1,59 @@
-use serde::Serialize;
+use crate::{
+    common::{ChannelConnection, Int},
+    desc_types::MiChannel,
+    mi_entities::{self, MetaDetailed, Note},
+};
 
-use crate::{common::Int, mi_entities::Note};
+use serde::Serialize;
+use std::collections::HashMap;
+
+mod federation;
+mod streaming;
+
+type WebSocketStream =
+    tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
 
 pub struct Client {
     host: String,
     token: Option<String>,
+    ws: Option<WebSocketStream>,
+    max_retry: i32,
+    connections: HashMap<ChannelConnection, MiChannel>,
+    retry_count: i32,
+    latest_reception: HashMap<ChannelConnection, mi_entities::Note>,
+    note_pool: Vec<(ChannelConnection, Note)>,
 }
 
 impl Client {
-    pub fn new(host: impl Into<String>, token: Option<impl Into<String>>) -> Self {
+    pub fn new(host: String, token: Option<String>) -> Self {
         Self {
-            host: host.into(),
-            token: token.map(|x| x.into()),
+            host,
+            token,
+            ws: None,
+            max_retry: 10,
+            connections: Default::default(),
+            retry_count: 0,
+            latest_reception: Default::default(),
+            note_pool: Default::default(),
         }
+    }
+
+    pub async fn meta(&self) -> anyhow::Result<MetaDetailed> {
+        #[derive(Serialize)]
+        struct ReqBody {
+            detail: bool,
+        }
+
+        let meta = reqwest::Client::new()
+            .post(format!("https://{}/api/meta", &self.host))
+            .json(&ReqBody { detail: true })
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
+
+        Ok(meta)
     }
 
     pub fn create_note(&self, text: String) {
