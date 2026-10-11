@@ -4,6 +4,7 @@ pub mod client;
 pub mod mi_entities;
 pub mod receiving_ws_msg;
 pub mod sending_ws_msg;
+pub mod utils;
 pub mod ws_connection;
 
 pub use client::Client;
