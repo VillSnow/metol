@@ -8,6 +8,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 
 mod federation;
+mod notes;
 mod streaming;
 
 type WebSocketStream =
@@ -65,10 +66,6 @@ impl Client {
             .await?;
 
         Ok(meta)
-    }
-
-    pub fn create_note(&self, text: String) {
-        todo!()
     }
 
     pub async fn create_reaction(&self, node_id: &str, reaction: &str) -> anyhow::Result<()> {

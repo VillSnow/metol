@@ -3,6 +3,7 @@ mod desc_types;
 mod new_type;
 
 pub mod client;
+pub mod mi_api_types;
 pub mod mi_entities;
 pub mod receiving_ws_msg;
 pub mod sending_ws_msg;
