@@ -67,8 +67,8 @@ impl MisskeyTestEnvironment {
             "初期管理者を作成できません: HTTP {status}: {body}"
         );
 
-        let bootstrap: BootstrapResponse = serde_json::from_str(&body)
-            .context("初期管理者の作成 API の応答を解析できません")?;
+        let bootstrap: BootstrapResponse =
+            serde_json::from_str(&body).context("初期管理者の作成 API の応答を解析できません")?;
         Ok(bootstrap.token)
     }
 

@@ -28,22 +28,14 @@ pub struct Client {
 impl Client {
     /// HTTPS と WSS を使う通常の Misskey インスタンス向けクライアントを作成します。
     pub fn new(host: String, token: Option<String>) -> Self {
-        Self::with_endpoints(
-            format!("https://{host}"),
-            format!("wss://{host}"),
-            token,
-        )
+        Self::with_endpoints(format!("https://{host}"), format!("wss://{host}"), token)
     }
 
     /// HTTP(S) と WS(S) の接続先を明示してクライアントを作成します。
     ///
     /// 接続先にはパスを含めず、サーバーの origin を指定してください。
     /// ローカル開発では `http://127.0.0.1:3000` と `ws://127.0.0.1:3000` のように指定します。
-    pub fn with_endpoints(
-        http_url: String,
-        ws_url: String,
-        token: Option<String>,
-    ) -> Self {
+    pub fn with_endpoints(http_url: String, ws_url: String, token: Option<String>) -> Self {
         Self {
             http_url: http_url.trim_end_matches('/').to_owned(),
             ws_url: ws_url.trim_end_matches('/').to_owned(),
