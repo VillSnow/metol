@@ -1,0 +1,45 @@
+services:
+  misskey:
+    image: ${MISSKEY_IMAGE:-misskey/misskey:2026.10.0}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./docker/misskey/default.yml:/misskey/.config/default.yml:ro
+      - misskey-files:/misskey/files
+
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: misskey
+      POSTGRES_USER: misskey
+      POSTGRES_PASSWORD: metol_local_test_password
+    volumes:
+      - misskey-db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - misskey-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  misskey-db:
+  misskey-redis:
+  misskey-files:
