@@ -8,8 +8,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::collections::HashMap;
 
 mod federation;
-#[rustfmt::skip]
-mod notes;
+mod generated;
 mod streaming;
 
 type WebSocketStream =
