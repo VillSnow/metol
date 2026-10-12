@@ -1,3 +1,4 @@
+use crate::common::Int;
 use serde::{Deserialize, Serialize};
 
 use crate::mi_entities::{note::ReactionAcceptance, Note, Visibility};
@@ -62,10 +63,10 @@ pub struct Poll {
     pub multiple: Option<bool>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub expires_at: Option<i64>,
+    pub expires_at: Option<Int>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub expired_after: Option<i64>,
+    pub expired_after: Option<Int>,
 }
 
 /// Response body for `POST /notes/create`.

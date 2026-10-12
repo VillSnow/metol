@@ -1,13 +1,14 @@
 use crate::{
-    common::{ChannelConnection, Int},
+    common::ChannelConnection,
     desc_types::MiChannel,
     mi_entities::{self, MetaDetailed, Note},
 };
 
-use serde::Serialize;
+use serde::{de::DeserializeOwned, Serialize};
 use std::collections::HashMap;
 
 mod federation;
+#[rustfmt::skip]
 mod notes;
 mod streaming;
 
@@ -68,77 +69,28 @@ impl Client {
         Ok(meta)
     }
 
-    pub async fn create_reaction(&self, node_id: &str, reaction: &str) -> anyhow::Result<()> {
-        let res = reqwest::Client::new()
-            .post(format!("{}/api/notes/reactions/create", &self.http_url))
-            .json(&serde_json::json!({"noteId": node_id,"reaction": reaction,"i": self.token.as_ref().unwrap()}))
-            .send()
-            .await?;
-        dbg!("{res:#?}");
-        res.error_for_status()?;
+    async fn http_api<B: Serialize, R: DeserializeOwned>(
+        &self,
+        path: &str,
+        body: &B,
+    ) -> anyhow::Result<R> {
+        let mut request = reqwest::Client::new()
+            .post(format!("{}/api{}", self.http_url, path))
+            .json(body);
+        if let Some(token) = self.token.as_ref() {
+            request = request.query(&[("i", token)]);
+        }
+        Ok(request.send().await?.error_for_status()?.json().await?)
+    }
+
+    async fn http_api_empty<B: Serialize>(&self, path: &str, body: &B) -> anyhow::Result<()> {
+        let mut request = reqwest::Client::new()
+            .post(format!("{}/api{}", self.http_url, path))
+            .json(body);
+        if let Some(token) = self.token.as_ref() {
+            request = request.query(&[("i", token)]);
+        }
+        request.send().await?.error_for_status()?;
         Ok(())
-    }
-
-    pub async fn conversation(&self, note_id: &str) -> anyhow::Result<Vec<Note>> {
-        #[derive(Debug, Serialize)]
-        #[serde(rename_all = "camelCase")]
-        struct ReqBody<'a> {
-            note_id: &'a str,
-
-            #[serde(default, skip_serializing_if = "Option::is_none")]
-            limit: Option<Int>,
-
-            #[serde(default, skip_serializing_if = "Option::is_none")]
-            offset: Option<Int>,
-
-            #[serde(default, skip_serializing_if = "Option::is_none")]
-            i: Option<&'a str>,
-        }
-        let c = reqwest::Client::new();
-        let notes: Vec<Note> = c
-            .post(format!("{}/api/notes/conversation", &self.http_url))
-            .json(&ReqBody {
-                note_id,
-                limit: None,
-                offset: None,
-                i: self.token.as_deref(),
-            })
-            .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await?;
-
-        Ok(notes)
-    }
-
-    pub async fn read_ltl(&self) -> anyhow::Result<Vec<Note>> {
-        #[derive(Debug, Serialize)]
-        #[serde(rename_all = "camelCase")]
-        struct ReqBody<'a> {
-            #[serde(default, skip_serializing_if = "Option::is_none")]
-            limit: Option<Int>,
-
-            #[serde(default, skip_serializing_if = "Option::is_none")]
-            offset: Option<Int>,
-
-            #[serde(default, skip_serializing_if = "Option::is_none")]
-            i: Option<&'a str>,
-        }
-        let c = reqwest::Client::new();
-        let notes: Vec<Note> = c
-            .post(format!("{}/api/notes/local-timeline", &self.http_url))
-            .json(&ReqBody {
-                limit: None,
-                offset: Some(100),
-                i: self.token.as_deref(),
-            })
-            .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await?;
-
-        Ok(notes)
     }
 }
